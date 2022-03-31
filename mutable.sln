@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mutable", "Mutable\Mutable.csproj", "{95D605D0-5D39-45BF-9D0F-A7C9B3D9DAB7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutableTests", "MutableTests\MutableTests.csproj", "{7B4B25E1-2A35-4EE0-A244-8EF7C5A1413C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		
+		{95D605D0-5D39-45BF-9D0F-A7C9B3D9DAB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95D605D0-5D39-45BF-9D0F-A7C9B3D9DAB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95D605D0-5D39-45BF-9D0F-A7C9B3D9DAB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95D605D0-5D39-45BF-9D0F-A7C9B3D9DAB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B4B25E1-2A35-4EE0-A244-8EF7C5A1413C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B4B25E1-2A35-4EE0-A244-8EF7C5A1413C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B4B25E1-2A35-4EE0-A244-8EF7C5A1413C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B4B25E1-2A35-4EE0-A244-8EF7C5A1413C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
