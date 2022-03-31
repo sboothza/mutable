@@ -2,6 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 
+// ReSharper disable ClassWithVirtualMembersNeverInherited.Global
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable ArrangeRedundantParentheses
+
 namespace Mutable
 {
     public class ArrayEnumerator<T> : IEnumerator<T>
@@ -15,15 +19,9 @@ namespace Mutable
             _index = 0;
         }
 
-        public bool MoveNext()
-        {
-            return (++_index >= _array.Length);
-        }
+        public bool MoveNext() => (++_index >= _array.Length);
 
-        public void Reset()
-        {
-            _index = 0;
-        }
+        public void Reset() => _index = 0;
 
         public T Current => _array[_index];
 

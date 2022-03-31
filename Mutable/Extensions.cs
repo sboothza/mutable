@@ -1,34 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+
+// ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable LoopCanBeConvertedToQuery
+// ReSharper disable UnusedMember.Global
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
 
 namespace Mutable
 {
+    /// <summary>
+    ///     Extensions to char[] and other helpers for <see cref="MutableString" /> <see cref="Locker" />
+    /// </summary>
     public static class Extensions
     {
-        public static IEnumerable<MutableString> ToMutable(this IEnumerable<string> values)
+        public static char[] SafeClone(this char[] array)
         {
-            return values.Select(s => new MutableString(s));
-        }
-        
-        public static IEnumerable<MutableString> ToMutable(this IEnumerable<char[]> values)
-        {
-            return values.Select(s => new MutableString(s));
+            if (array == null)
+                return Array.Empty<char>();
+            return array.Clone() as char[];
         }
 
-        public static IEnumerable<string> ToStrings(this IEnumerable<MutableString> values)
-        {
-            return values.Select(s => s.ToString());
-        }
-
-        public static MutableString ToMutable(this string value)
-        {
-            return new MutableString(value);
-        }
-
-        public static IEnumerable<char[]> ToCharArrays(this IEnumerable<MutableString> values)
-        {
-            return values.Select(v => (char[])v);
-        }
+        public static IEnumerable<MutableString> ToMutable(this    IEnumerable<string>        values) => values.Select(s => new MutableString(s));
+        public static IEnumerable<MutableString> ToMutable(this    IEnumerable<char[]>        values) => values.Select(s => new MutableString(s));
+        public static IEnumerable<string>        ToStrings(this    IEnumerable<MutableString> values) => values.Select(s => s.ToString());
+        public static MutableString              ToMutable(this    string                     value)  => new(value);
+        public static IEnumerable<char[]>        ToCharArrays(this IEnumerable<MutableString> values) => values.Select(v => (char[])v);
 
         public static int SearchInCharArray(this char[] source, char[] sought, int initial = 0)
         {
@@ -41,7 +39,6 @@ namespace Mutable
                 return -1;
 
             for (int sourceIndex = initial, soughtIndex = 0; sourceIndex < source.Length; sourceIndex++)
-            {
                 if (source[sourceIndex] == sought[soughtIndex])
                 {
                     if (++soughtIndex == sought.Length)
@@ -52,7 +49,6 @@ namespace Mutable
                     soughtIndex = 0;
                     sourceIndex--; // since i will be incremented in the next iteration
                 }
-            }
 
             return -1;
         }
@@ -71,7 +67,6 @@ namespace Mutable
                 return -1;
 
             for (int sourceIndex = initial, soughtIndex = sought.Length - 1; sourceIndex >= 0; sourceIndex--)
-            {
                 if (source[sourceIndex] == sought[soughtIndex])
                 {
                     if (--soughtIndex < 0)
@@ -82,7 +77,6 @@ namespace Mutable
                     soughtIndex = sought.Length - 1;
                     sourceIndex++; // since i will be decremented in the next iteration
                 }
-            }
 
             return -1;
         }
@@ -171,19 +165,39 @@ namespace Mutable
         {
             if (source == null || source.Length == 0)
                 yield break;
-            
+
             var index     = 0;
             var lastIndex = 0;
             while (index < source.Length)
             {
-                if (source[index++] == separator)
-                {
-                    yield return source[lastIndex..(index-1)];
-                    lastIndex = index;
-                }
+                if (source[index++] != separator)
+                    continue;
+
+                yield return source[lastIndex..(index - 1)];
+                lastIndex = index;
             }
 
             yield return source[lastIndex..];
         }
+
+        public static bool HasWhitespace(this char[] valueArray)
+        {
+            for (var i = 0; i < valueArray.Length; i++)
+                if (char.IsWhiteSpace(valueArray[i]))
+                    return true;
+            return false;
+        }
+
+        public static bool HasNonWhitespace(this char[] valueArray)
+        {
+            for (var i = 0; i < valueArray.Length; i++)
+                if (!char.IsWhiteSpace(valueArray[i]))
+                    return true;
+            return false;
+        }
+
+        public static IDisposable GetReadLock(this        ReaderWriterLockSlim lockObject) => new Locker(lockObject, Locker.LockType.Read);
+        public static IDisposable GetWriteLock(this       ReaderWriterLockSlim lockObject) => new Locker(lockObject, Locker.LockType.Write);
+        public static IDisposable GetUpgradeableLock(this ReaderWriterLockSlim lockObject) => new Locker(lockObject, Locker.LockType.Upgradeable);
     }
 }

@@ -121,13 +121,13 @@ namespace MutableTests
         {
             var str1 = new MutableString("the quick brown fox quickly ate the rat");
             var str2 = str1.Clone() as MutableString;
-            
+
             str1.Replace("fox", "cow");
             Assert.AreEqual("the quick brown cow quickly ate the rat", str1.ToString());
-            
+
             str2.Replace("quick", "slow");
             Assert.AreEqual("the slow brown fox slowly ate the rat", str2.ToString());
-            
+
             str2.Replace("the", "__THE__");
             Assert.AreEqual("__THE__ slow brown fox slowly ate __THE__ rat", str2.ToString());
         }
@@ -138,16 +138,17 @@ namespace MutableTests
             var str = new MutableString("   the quick brown fox quickly ate the rat   ");
             str.TrimStart();
             Assert.AreEqual("the quick brown fox quickly ate the rat   ", str.ToString());
-            
+
             str.TrimEnd();
             Assert.AreEqual("the quick brown fox quickly ate the rat", str.ToString());
-            
+
             str = new MutableString("   the quick brown fox quickly ate the rat   ");
             str.Trim();
             Assert.AreEqual("the quick brown fox quickly ate the rat", str.ToString());
         }
-        
-        [Test, Explicit]
+
+        [Test]
+        [Explicit]
         public void PerformanceStandard()
         {
             var source = "the quick brown fox quickly ate the rat";
@@ -166,7 +167,8 @@ namespace MutableTests
             Console.WriteLine($"total:{duration:c}");
         }
 
-        [Test, Explicit]
+        [Test]
+        [Explicit]
         public void PerformanceCustom()
         {
             var source = "the quick brown fox quickly ate the rat".ToMutable();

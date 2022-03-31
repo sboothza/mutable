@@ -12,11 +12,12 @@ namespace MutableTests
         public void StringTests()
         {
             var s1 = "string1" + "string2";
-            //var s2 = s1        - "string2";
 
+            //var s2 = s1        - "string2";
 
             Assert.True(true);
         }
+
         [Test]
         public void ArrayTests()
         {
@@ -24,6 +25,7 @@ namespace MutableTests
             var source2 = source.Clone() as char[];
             Assert.AreEqual(source, source2);
         }
+
         [Test]
         public void BasicFind()
         {
@@ -32,7 +34,7 @@ namespace MutableTests
 
             var position = source.SearchInCharArray(sought);
             Assert.AreEqual(10, position);
-            
+
             position = source.ReverseSearchInCharArray(sought);
             Assert.AreEqual(10, position);
         }
@@ -45,19 +47,19 @@ namespace MutableTests
 
             var position = source.SearchInCharArray(sought);
             Assert.AreEqual(4, position);
-            
+
             position = source.ReverseSearchInCharArray(sought);
             Assert.AreEqual(20, position);
 
             position = source.SearchInCharArray(sought, 5);
             Assert.AreEqual(20, position);
-            
+
             position = source.ReverseSearchInCharArray(sought, 20);
             Assert.AreEqual(4, position);
 
             position = source.SearchInCharArray(sought, 21);
             Assert.AreEqual(-1, position);
-            
+
             position = source.ReverseSearchInCharArray(sought, 4);
             Assert.AreEqual(-1, position);
         }
@@ -70,19 +72,20 @@ namespace MutableTests
 
             var position = source.SearchInCharArray(sought);
             Assert.AreEqual(9, position);
-            
+
             position = source.ReverseSearchInCharArray(sought);
             Assert.AreEqual(25, position);
 
             sought   = "qqquick".ToCharArray();
             position = source.SearchInCharArray(sought);
             Assert.AreEqual(7, position);
-            
+
             position = source.ReverseSearchInCharArray(sought);
             Assert.AreEqual(7, position);
         }
 
-        [Test, Explicit]
+        [Test]
+        [Explicit]
         public void PerformanceStandard()
         {
             var source = "the quick brown fox quickly ate the rat";
@@ -101,7 +104,8 @@ namespace MutableTests
             Console.WriteLine($"total:{duration:c}");
         }
 
-        [Test, Explicit]
+        [Test]
+        [Explicit]
         public void PerformanceCustom()
         {
             var source = "the quick brown fox quickly ate the rat".ToCharArray();
@@ -150,21 +154,16 @@ namespace MutableTests
         [Test]
         public void TestToMutable()
         {
-            var strings = new[]{ "one", "two", "three" };
+            var strings = new[] { "one", "two", "three" };
             foreach (var ms in strings.ToMutable())
-            {
                 Trace.WriteLine($"{ms}");
-            }
         }
 
         [Test]
         public void TestSplit()
         {
             foreach (var s in "this is a test of my happiness".ToCharArray().Split(' '))
-            {
                 Trace.WriteLine(new string(s));
-            }
         }
-        
     }
 }
