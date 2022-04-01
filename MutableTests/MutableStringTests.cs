@@ -1,6 +1,7 @@
 ﻿using System;
 using Mutable;
 using NUnit.Framework;
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
 
 namespace MutableTests
 {
@@ -125,8 +126,8 @@ namespace MutableTests
             str1.Replace("fox", "cow");
             Assert.AreEqual("the quick brown cow quickly ate the rat", str1.ToString());
 
-            str2.Replace("quick", "slow");
-            Assert.AreEqual("the slow brown fox slowly ate the rat", str2.ToString());
+            str2?.Replace("quick", "slow");
+            Assert.AreEqual("the slow brown fox slowly ate the rat", str2?.ToString());
 
             str2.Replace("the", "__THE__");
             Assert.AreEqual("__THE__ slow brown fox slowly ate __THE__ rat", str2.ToString());

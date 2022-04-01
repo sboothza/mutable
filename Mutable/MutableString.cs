@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 // ReSharper disable UnusedMethodReturnValue.Global
@@ -521,15 +522,20 @@ namespace Mutable
         /// <returns></returns>
         public bool Contains(string value) => Contains(value.ToCharArray());
 
-        public static                   bool operator ==(MutableString         a, MutableString b) => Equals(a, b);
-        public static                   bool operator !=(MutableString         a, MutableString b) => !Equals(a, b);
-        public static                   bool operator <(MutableString          a, MutableString b) => Compare(a, b) < 0;
-        public static                   bool operator >(MutableString          a, MutableString b) => Compare(a, b) > 0;
-        public static                   bool operator <=(MutableString         a, MutableString b) => Compare(a, b) <= 0;
-        public static                   bool operator >=(MutableString         a, MutableString b) => Compare(a, b) >= 0;
-        public static implicit operator string(MutableString                   value)              => value.ToString();
-        public static explicit operator char[](MutableString                   value)              => value._data;
-        public static                   MutableString operator +(MutableString a, MutableString b) => new MutableString(a).Append(b);
+        public static bool operator ==(MutableString a, MutableString b) => Equals(a, b);
+        public static bool operator !=(MutableString a, MutableString b) => !Equals(a, b);
+        public static bool operator <(MutableString  a, MutableString b) => Compare(a, b) < 0;
+        public static bool operator >(MutableString  a, MutableString b) => Compare(a, b) > 0;
+        public static bool operator <=(MutableString a, MutableString b) => Compare(a, b) <= 0;
+        public static bool operator >=(MutableString a, MutableString b) => Compare(a, b) >= 0;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator string(MutableString value) => value.ToString();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static explicit operator char[](MutableString value) => value._data;
+
+        public static MutableString operator +(MutableString a, MutableString b) => new MutableString(a).Append(b);
 
         /// <summary>
         ///     Changes the contents string to lowercase

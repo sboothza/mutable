@@ -1,6 +1,9 @@
-﻿using System;
+﻿//#define USE_DUMMY_LOCKER
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 // ReSharper disable ForCanBeConvertedToForeach
@@ -196,8 +199,34 @@ namespace Mutable
             return false;
         }
 
-        public static IDisposable GetReadLock(this        ReaderWriterLockSlim lockObject) => new Locker(lockObject, Locker.LockType.Read);
-        public static IDisposable GetWriteLock(this       ReaderWriterLockSlim lockObject) => new Locker(lockObject, Locker.LockType.Write);
-        public static IDisposable GetUpgradeableLock(this ReaderWriterLockSlim lockObject) => new Locker(lockObject, Locker.LockType.Upgradeable);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IDisposable GetReadLock(this ReaderWriterLockSlim lockObject)
+        {
+#if USE_DUMMY_LOCKER
+            return new DummyLocker();
+#else
+            return new Locker(lockObject, Locker.LockType.Read);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IDisposable GetWriteLock(this ReaderWriterLockSlim lockObject)
+        {
+#if USE_DUMMY_LOCKER
+            return new DummyLocker();
+#else
+            return new Locker(lockObject, Locker.LockType.Write);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IDisposable GetUpgradeableLock(this ReaderWriterLockSlim lockObject)
+        {
+#if USE_DUMMY_LOCKER
+            return new DummyLocker();
+#else
+            return new Locker(lockObject, Locker.LockType.Upgradeable);
+#endif
+        }
     }
 }
