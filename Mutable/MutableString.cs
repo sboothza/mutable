@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 // ReSharper disable UnusedMethodReturnValue.Global
 // ReSharper disable SpecifyACultureInStringConversionExplicitly
@@ -21,10 +20,9 @@ namespace Mutable
     /// </summary>
     public class MutableString : IEnumerable<char>, IComparable, IComparable<string>, IComparable<MutableString>, IConvertible, IEquatable<string>, IEquatable<MutableString>, ICloneable
     {
-        private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
-        private          char[]               _data;
-        private          bool                 _dirty       = true;
-        private          string               _stringValue = "";
+        private char[] _data;
+        private bool   _dirty       = true;
+        private string _stringValue = "";
 
 #pragma warning disable CS8618
         public MutableString(int size) => Resize(size, false);
@@ -46,23 +44,14 @@ namespace Mutable
 
         public char this[int index]
         {
-            get
-            {
-                using (_lock.GetReadLock())
-                {
-                    return index >= Length || index < 0 ? throw new IndexOutOfRangeException() : _data[index];
-                }
-            }
+            get => index >= _data.Length || index < 0 ? throw new IndexOutOfRangeException() : _data[index];
             set
             {
-                using (_lock.GetWriteLock())
-                {
-                    if (index < 0 || _data.Length <= index)
-                        return;
+                if (index < 0 || _data.Length <= index)
+                    return;
 
-                    _data[index] = value;
-                    _dirty       = true;
-                }
+                _data[index] = value;
+                _dirty       = true;
             }
         }
 
@@ -108,7 +97,7 @@ namespace Mutable
             if (value == null)
                 return false;
 
-            if (Length != value.Length)
+            if (_data.Length != value.Length)
                 return false;
 
             return CompareInternal(value.ToCharArray()) == 0;
@@ -116,41 +105,32 @@ namespace Mutable
 
         public override string ToString()
         {
-            using (_lock.GetReadLock())
+            // ReSharper disable once InvertIf
+            if (_dirty)
             {
-                // ReSharper disable once InvertIf
-                if (_dirty)
-                {
-                    _dirty       = false;
-                    _stringValue = new string(_data);
-                }
-
-                return _stringValue;
+                _dirty       = false;
+                _stringValue = new string(_data);
             }
+
+            return _stringValue;
         }
 
         private void Resize(int size, bool moveExisting, int startIndex = 0)
         {
-            using (_lock.GetWriteLock())
-            {
-                var newBuffer = new char[size];
-                if (moveExisting)
-                    Array.Copy(_data, 0, newBuffer, startIndex, _data.Length);
-                _data = newBuffer;
-            }
+            var newBuffer = new char[size];
+            if (moveExisting)
+                Array.Copy(_data, 0, newBuffer, startIndex, _data.Length);
+            _data = newBuffer;
         }
 
         public string GetSubString(int index, int length = 0) => new(GetSlice(index, length));
 
         public char[] GetSlice(int index, int length = 0)
         {
-            using (_lock.GetReadLock())
-            {
-                if (length == 0)
-                    length = _data.Length - index;
+            if (length == 0)
+                length = _data.Length - index;
 
-                return _data[index..(index + length)];
-            }
+            return _data[index..(index + length)];
         }
 
         /// <summary>
@@ -170,14 +150,11 @@ namespace Mutable
         /// <exception cref="IndexOutOfRangeException"></exception>
         public MutableString SetSubString(int index, char[] valueArray)
         {
-            using (_lock.GetWriteLock())
-            {
-                if (index + valueArray.Length >= _data.Length)
-                    throw new IndexOutOfRangeException();
+            if (index + valueArray.Length >= _data.Length)
+                throw new IndexOutOfRangeException();
 
-                Array.Copy(valueArray, 0, _data, index, valueArray.Length);
-                _dirty = true;
-            }
+            Array.Copy(valueArray, 0, _data, index, valueArray.Length);
+            _dirty = true;
 
             return this;
         }
@@ -192,14 +169,11 @@ namespace Mutable
         /// <exception cref="IndexOutOfRangeException"></exception>
         public MutableString FillSubString(int index, int length, char value)
         {
-            using (_lock.GetWriteLock())
-            {
-                if (index + length > _data.Length)
-                    throw new IndexOutOfRangeException();
+            if (index + length > _data.Length)
+                throw new IndexOutOfRangeException();
 
-                Array.Fill(_data, value, index, length);
-                _dirty = true;
-            }
+            Array.Fill(_data, value, index, length);
+            _dirty = true;
 
             return this;
         }
@@ -212,14 +186,11 @@ namespace Mutable
         /// <returns></returns>
         public MutableString Stretch(int index, int length)
         {
-            using (_lock.GetWriteLock())
-            {
-                var newBuffer = new char[Length + length];
-                Array.Copy(_data, 0, newBuffer, 0, index);
-                Array.Copy(_data, index, newBuffer, index + length, Length - index);
-                _data  = newBuffer;
-                _dirty = true;
-            }
+            var newBuffer = new char[_data.Length + length];
+            Array.Copy(_data, 0, newBuffer, 0, index);
+            Array.Copy(_data, index, newBuffer, index + length, _data.Length - index);
+            _data  = newBuffer;
+            _dirty = true;
 
             return this;
         }
@@ -245,13 +216,10 @@ namespace Mutable
         /// <returns></returns>
         public MutableString Append(char[] valueArray)
         {
-            using (_lock.GetWriteLock())
-            {
-                var endOfArray = Length;
-                Resize(Length + valueArray.Length, true);
-                Array.Copy(valueArray, 0, _data, endOfArray, valueArray.Length);
-                _dirty = true;
-            }
+            var endOfArray = _data.Length;
+            Resize(_data.Length + valueArray.Length, true);
+            Array.Copy(valueArray, 0, _data, endOfArray, valueArray.Length);
+            _dirty = true;
 
             return this;
         }
@@ -277,12 +245,9 @@ namespace Mutable
         /// <returns></returns>
         public MutableString Prepend(char[] valueArray)
         {
-            using (_lock.GetWriteLock())
-            {
-                Resize(Length + valueArray.Length, true, valueArray.Length);
-                Array.Copy(valueArray, 0, _data, 0, valueArray.Length);
-                _dirty = true;
-            }
+            Resize(_data.Length + valueArray.Length, true, valueArray.Length);
+            Array.Copy(valueArray, 0, _data, 0, valueArray.Length);
+            _dirty = true;
 
             return this;
         }
@@ -311,12 +276,9 @@ namespace Mutable
         /// <returns></returns>
         public MutableString Insert(int index, char[] valueArray)
         {
-            using (_lock.GetWriteLock())
-            {
-                Stretch(index, valueArray.Length);
-                Array.Copy(valueArray, 0, _data, index, valueArray.Length);
-                _dirty = true;
-            }
+            Stretch(index, valueArray.Length);
+            Array.Copy(valueArray, 0, _data, index, valueArray.Length);
+            _dirty = true;
 
             return this;
         }
@@ -337,13 +299,10 @@ namespace Mutable
         /// <returns></returns>
         public int IndexOf(char[] valueArray, int index = 0)
         {
-            using (_lock.GetReadLock())
-            {
-                if (index < 0 || index + valueArray.Length >= Length)
-                    return -1;
+            // if (index < 0 || index + valueArray.Length >= _data.Length)
+            //     return -1;
 
-                return _data.SearchInCharArray(valueArray, index);
-            }
+            return _data.SearchInCharArray(index, valueArray, 0);
         }
 
         /// <summary>
@@ -352,7 +311,7 @@ namespace Mutable
         /// <param name="value"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        public int IndexOf(MutableString value, int index = 0) => IndexOf((char[])value, index);
+        public int IndexOf(MutableString value, int index = 0) => IndexOf(value._data, index);
 
         /// <summary>
         ///     Checks for any whitespace chars in the string
@@ -382,13 +341,10 @@ namespace Mutable
         /// <returns></returns>
         public int LastIndexOf(char[] valueArray, int index = 0)
         {
-            using (_lock.GetReadLock())
-            {
-                if (index < 0 || index + valueArray.Length >= Length)
-                    return -1;
+            if (index < 0 || index + valueArray.Length >= _data.Length)
+                return -1;
 
-                return _data.ReverseSearchInCharArray(valueArray, index);
-            }
+            return _data.ReverseSearchInCharArray(valueArray, index);
         }
 
         /// <summary>
@@ -417,14 +373,14 @@ namespace Mutable
         /// <returns></returns>
         public MutableString Replace(char[] findArray, char[] replaceArray)
         {
-            using (_lock.GetWriteLock())
+            var index = IndexOf(findArray);
+            while (index >= 0)
             {
-                var index = IndexOf(findArray);
-                while (index >= 0)
-                {
+                if (findArray.Length == replaceArray.Length)
+                    SetSubString(index, replaceArray);
+                else
                     ReplaceOne(index, findArray.Length, replaceArray);
-                    index = IndexOf(findArray);
-                }
+                index = IndexOf(findArray);
             }
 
             return this;
@@ -447,10 +403,10 @@ namespace Mutable
         /// <param name="replaceArray"></param>
         private void ReplaceOne(int start, int length, char[] replaceArray)
         {
-            var buffer = new char[Length - length + replaceArray.Length];
+            var buffer = new char[_data.Length - length + replaceArray.Length];
             Array.Copy(_data, 0, buffer, 0, start);
             Array.Copy(replaceArray, 0, buffer, start, replaceArray.Length);
-            Array.Copy(_data, start + length, buffer, start + replaceArray.Length, Length - start - length);
+            Array.Copy(_data, start + length, buffer, start + replaceArray.Length, _data.Length - start - length);
             _data  = buffer;
             _dirty = true;
         }
@@ -468,38 +424,29 @@ namespace Mutable
             return obj is MutableString str && Equals(this, str);
         }
 
-        public static bool Equals(MutableString? a, MutableString? b)
-        {
-            if (a is null || b is null)
-                return false;
-
-            if (ReferenceEquals(a, b))
-                return true;
-
-            if (a.Length != b.Length)
-                return false;
-
-            return a.CompareInternal((char[])b) == 0;
-        }
+        public static bool Equals(MutableString? a, MutableString? b) => (a, b) switch
+                                                                         {
+                                                                             { a: null }                                                        => false,
+                                                                             { b: null }                                                        => false,
+                                                                             { a: not null, b: not null } when ReferenceEquals(a, b)            => true,
+                                                                             { a: not null, b: not null } when a._data.Length != b._data.Length => false,
+                                                                             _                                                                  => a.CompareInternal((char[])b) == 0
+                                                                         };
 
         protected int CompareInternal(char[] other)
         {
-            using (_lock.GetReadLock())
-            {
-                return _data.CompareCharArray(other);
-            }
+            var result = _data.CompareCharArray(0, other, 0, _data.Length);
+            return result == 0 ? _data.Length - other.Length : result;
         }
 
-        public static int Compare(MutableString? a, MutableString? b)
-        {
-            if (a is null)
-                return -1;
-
-            if (b is null)
-                return 1;
-
-            return ReferenceEquals(a, b) ? 0 : a.CompareInternal((char[])b);
-        }
+        public static int Compare(MutableString? a, MutableString? b) => (a, b) switch
+                                                                         {
+                                                                             { a: null, b    : null }                                => 0,
+                                                                             { a: null, b    : not null }                            => -1,
+                                                                             { a: not null, b: null }                                => 1,
+                                                                             { a: not null, b: not null } when ReferenceEquals(a, b) => 0,
+                                                                             _                                                       => a.CompareInternal((char[])b)
+                                                                         };
 
         /// <summary>
         ///     Checks if the value exists within the string
@@ -576,37 +523,28 @@ namespace Mutable
         /// </summary>
         /// <param name="separator"></param>
         /// <returns></returns>
-        public IEnumerable<MutableString> Split(char separator)
-        {
-            using (_lock.GetReadLock())
-            {
-                return _data.Split(separator).ToMutable();
-            }
-        }
+        public IEnumerable<MutableString> Split(char separator) => _data.Split(separator).ToMutable();
 
         private MutableString Trim(bool head, bool tail)
         {
-            using (_lock.GetWriteLock())
-            {
-                var end   = Length - 1;
-                var start = 0;
+            var end   = _data.Length - 1;
+            var start = 0;
 
-                if (head)
-                    for (start = 0; start < Length; start++)
-                        if (!char.IsWhiteSpace(this[start]))
-                            break;
+            if (head)
+                for (start = 0; start < _data.Length; start++)
+                    if (!char.IsWhiteSpace(this[start]))
+                        break;
 
-                if (tail)
-                    for (end = Length - 1; end >= start; end--)
-                        if (!char.IsWhiteSpace(this[end]))
-                            break;
+            if (tail)
+                for (end = _data.Length - 1; end >= start; end--)
+                    if (!char.IsWhiteSpace(this[end]))
+                        break;
 
-                var len    = end - start + 1;
-                var buffer = new char[len];
-                Array.Copy(_data, start, buffer, 0, len);
-                _data  = buffer;
-                _dirty = true;
-            }
+            var len    = end - start + 1;
+            var buffer = new char[len];
+            Array.Copy(_data, start, buffer, 0, len);
+            _data  = buffer;
+            _dirty = true;
 
             return this;
         }

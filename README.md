@@ -23,6 +23,10 @@ Or build from source - Compatible with VS or Rider.
 
 Command line: `dotnet build --configuration Release Mutable.csproj`
 
+## Testing
+
+Test project is provided - nunit
+
 ### Disclaimer
 
 Go wild - use it, plagiarise, whatever.
