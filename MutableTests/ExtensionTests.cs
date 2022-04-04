@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
+using System.Linq;
 using Mutable;
 using NUnit.Framework;
 
@@ -381,73 +382,25 @@ namespace MutableTests
         }
 
         [Test]
-        public void LockSlimTest()
+        public void TestEnumerable()
         {
-            ReaderWriterLockSlim lockObject = new(LockRecursionPolicy.SupportsRecursion);
-            var                  startTime  = DateTime.Now;
-            var                  source     = "the quick brown fox quickly ate the rat".ToCharArray();
-            var                  sought     = "quick".ToCharArray();
+            var l    = new[] { 1, 2, 3, 4 };
+            var newL = new List<int>();
+            foreach (var i in l.EnumerateWith(0))
+            {
+                Trace.WriteLine(i);
+                newL.Add(i);
+            }
 
-            for (var i = 0; i < 10000000; i++)
-                try
-                {
-                    lockObject.EnterWriteLock();
-                    var position = source.SearchInCharArray(5, sought);
-                    if (position != 20)
-                        throw new InvalidOperationException("bugger");
-                }
-                finally
-                {
-                    lockObject.ExitWriteLock();
-                }
-
-            var duration = DateTime.Now - startTime;
-            Console.WriteLine($"total:{duration:c}");
+            Assert.AreEqual(new[] { 0, 1, 2, 3, 4 }, newL.ToArray());
         }
 
         [Test]
-        public void LockTest()
+        public void TestEnumerable2()
         {
-            ReaderWriterLock lockObject = new();
-            var              startTime  = DateTime.Now;
-            var              source     = "the quick brown fox quickly ate the rat".ToCharArray();
-            var              sought     = "quick".ToCharArray();
-
-            for (var i = 0; i < 10000000; i++)
-                try
-                {
-                    lockObject.AcquireWriterLock(1000);
-                    var position = source.SearchInCharArray(5, sought);
-                    if (position != 20)
-                        throw new InvalidOperationException("bugger");
-                }
-                finally
-                {
-                    lockObject.ReleaseWriterLock();
-                }
-
-            var duration = DateTime.Now - startTime;
-            Console.WriteLine($"total:{duration:c}");
-        }
-
-        [Test]
-        public void DisposableLockTest()
-        {
-            ReaderWriterLockSlim lockObject = new(LockRecursionPolicy.SupportsRecursion);
-            var                  startTime  = DateTime.Now;
-            var                  source     = "the quick brown fox quickly ate the rat".ToCharArray();
-            var                  sought     = "quick".ToCharArray();
-
-            for (var i = 0; i < 10000000; i++)
-                using (lockObject.WriteLock())
-                {
-                    var position = source.SearchInCharArray(5, sought);
-                    if (position != 20)
-                        throw new InvalidOperationException("bugger");
-                }
-
-            var duration = DateTime.Now - startTime;
-            Console.WriteLine($"total:{duration:c}");
+            var l = new[] { 1, 2, 3, 4 };
+            var m = l.EnumerateWith(0).Min();
+            Assert.AreEqual(0, m);
         }
     }
 }

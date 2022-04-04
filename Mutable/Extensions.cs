@@ -61,7 +61,7 @@ namespace Mutable
 
         public static int SignOnly(this int value) => value == 0 ? 0 : value / Math.Abs(value);
 
-        public static IEnumerator<T> EnumerateWith<T>(this IEnumerable<T> list, T item)
+        public static IEnumerable<T> EnumerateWith<T>(this IEnumerable<T> list, T item)
         {
             yield return item;
             using (var e = list.GetEnumerator())
@@ -357,93 +357,6 @@ namespace Mutable
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDisposable ReadLock(this ReaderWriterLockSlim lockObject)
-        {
-#if USE_DUMMY_LOCKER
-                    return new DummyLocker();
-#else
-            return new Locker(lockObject, Locker.LockType.Read);
-#endif
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDisposable WriteLock(this ReaderWriterLockSlim lockObject)
-        {
-#if USE_DUMMY_LOCKER
-                    return new DummyLocker();
-#else
-            return new Locker(lockObject, Locker.LockType.Write);
-#endif
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDisposable UpgradeableLock(this ReaderWriterLockSlim lockObject)
-        {
-#if USE_DUMMY_LOCKER
-                    return new DummyLocker();
-#else
-            return new Locker(lockObject, Locker.LockType.Upgradeable);
-#endif
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void GetReadLock(this ReaderWriterLockSlim lockObject) => Lock(lockObject, Locker.LockType.Read);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void GetWriteLock(this ReaderWriterLockSlim lockObject) => Lock(lockObject, Locker.LockType.Write);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void GetUpgradeableLock(this ReaderWriterLockSlim lockObject) => Lock(lockObject, Locker.LockType.Upgradeable);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UnlockReadLock(this ReaderWriterLockSlim lockObject) => Unlock(lockObject, Locker.LockType.Read);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UnlockWriteLock(this ReaderWriterLockSlim lockObject) => Unlock(lockObject, Locker.LockType.Write);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UnlockUpgradeableLock(this ReaderWriterLockSlim lockObject) => Unlock(lockObject, Locker.LockType.Upgradeable);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Lock(this ReaderWriterLockSlim lockObject, Locker.LockType lockType)
-        {
-            switch (lockType)
-            {
-                case Locker.LockType.Read:
-                    lockObject.EnterReadLock();
-                    break;
-
-                case Locker.LockType.Write:
-                    lockObject.EnterWriteLock();
-                    break;
-
-                case Locker.LockType.Upgradeable:
-                    lockObject.EnterUpgradeableReadLock();
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(lockType), lockType, null);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Unlock(this ReaderWriterLockSlim lockObject, Locker.LockType lockType)
-        {
-            switch (lockType)
-            {
-                case Locker.LockType.Read:
-                    lockObject.ExitReadLock();
-                    break;
-
-                case Locker.LockType.Write:
-                    lockObject.ExitWriteLock();
-                    break;
-
-                case Locker.LockType.Upgradeable:
-                    lockObject.ExitUpgradeableReadLock();
-                    break;
-            }
-        }
+        
     }
 }

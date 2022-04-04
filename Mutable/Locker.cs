@@ -5,6 +5,14 @@ using System.Threading;
 
 namespace Mutable
 {
+    /// <summary>
+    /// Disposable locking object
+    /// Allows for simple lock constructs like:
+    /// using (lockObject.WriteLock())
+    /// {...}
+    /// Not very fast - the overhead from creating and disposing makes it unsuitable for performance code
+    /// But it's very easy to use and will be fine in most conditions
+    /// </summary>
     public class Locker : IDisposable
     {
         public enum LockType
