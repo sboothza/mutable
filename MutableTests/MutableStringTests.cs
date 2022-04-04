@@ -1,6 +1,7 @@
 ﻿using System;
 using Mutable;
 using NUnit.Framework;
+
 // ReSharper disable SpecifyACultureInStringConversionExplicitly
 
 namespace MutableTests

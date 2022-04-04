@@ -297,13 +297,11 @@ namespace Mutable
         /// <param name="valueArray"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        public int IndexOf(char[] valueArray, int index = 0)
-        {
+        public int IndexOf(char[] valueArray, int index = 0) =>
+
             // if (index < 0 || index + valueArray.Length >= _data.Length)
             //     return -1;
-
-            return _data.SearchInCharArray(index, valueArray, 0);
-        }
+            _data.SearchInCharArray(index, valueArray);
 
         /// <summary>
         ///     Finds the first index of the value from the provided index, in order

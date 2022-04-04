@@ -41,7 +41,7 @@ namespace Mutable
                 return 0;
 
             // base case 2: source is NULL, or source's length is less than sought
-            if ((soughtLength - soughtInd) > (sourceLength - sourceInd))
+            if (soughtLength - soughtInd > sourceLength - sourceInd)
                 return -1;
 
             for (int sourceIndex = sourceInd, soughtIndex = soughtInd; sourceIndex < sourceLength; sourceIndex++)
@@ -75,9 +75,11 @@ namespace Mutable
 
         public static unsafe int CompareCharArray(this char[] source, int sourceIndex, char[] target, int targetIndex, int length)
         {
-            var matchRemaining  = sizeof(char) * length;
-            var sourceRemaining = sizeof(char) * (source.Length - sourceIndex);
-            var targetRemaining = sizeof(char) * (target.Length - targetIndex);
+            var matchLength  = sizeof(char) * length;
+            var sourceLength = Math.Min(matchLength, sizeof(char) * (source.Length - sourceIndex));
+            var targetLength = Math.Min(matchLength, sizeof(char) * (target.Length - targetIndex));
+
+            var remaining = Math.Min(sourceLength, targetLength);
 
             fixed (char* sourcePtr = &source[sourceIndex], targetPtr = &target[targetIndex])
             {
@@ -85,42 +87,38 @@ namespace Mutable
                 var targetBytePtr = (byte*)targetPtr;
 
                 //compare as ulong
-                while (sourceRemaining >= 8 && targetRemaining >= 8 && matchRemaining >= 8)
+                var num = remaining >> 3;
+                for (var i = 0; i < num; i++)
                 {
-                    var sourceLongValue = *(ulong*)sourceBytePtr;
-                    var targetLongValue = *(ulong*)targetBytePtr;
-                    if (sourceLongValue != targetLongValue)
-                        return (int)(targetLongValue - sourceLongValue);
-                    sourceBytePtr   += 8;
-                    targetBytePtr   += 8;
-                    sourceRemaining -= 8;
-                    targetRemaining -= 8;
-                    matchRemaining  -= 8;
+                    var sourceValue = *(ulong*)sourceBytePtr;
+                    var targetValue = *(ulong*)targetBytePtr;
+                    if (sourceValue != targetValue)
+                        return (int)(targetValue - sourceValue);
+
+                    sourceBytePtr += 8;
+                    targetBytePtr += 8;
                 }
 
                 //compare shorts
-                while (sourceRemaining >= 2 && targetRemaining >= 2 && matchRemaining >= 2)
+                num = (remaining & 7) >> 1;
+                for (var i = 0; i < num; i++)
                 {
-                    var sourceShortValue = *(ushort*)sourceBytePtr;
-                    var targetShortValue = *(ushort*)targetBytePtr;
-                    if (sourceShortValue != targetShortValue)
-                        return targetShortValue - sourceShortValue;
-                    sourceBytePtr   += 2;
-                    targetBytePtr   += 2;
-                    sourceRemaining -= 2;
-                    targetRemaining -= 2;
-                    matchRemaining  -= 2;
+                    var sourceValue = *(ushort*)sourceBytePtr;
+                    var targetValue = *(ushort*)targetBytePtr;
+                    if (sourceValue != targetValue)
+                        return targetValue - sourceValue;
+
+                    sourceBytePtr += 2;
+                    targetBytePtr += 2;
                 }
 
-                if (matchRemaining == 0)
-                    return 0;
-                return sourceRemaining - targetRemaining;
+                return sourceLength - targetLength;
             }
         }
 
         /// <summary>
-        /// Copy char array
-        /// Same speed as Array.Copy so unused
+        ///     Copy char array
+        ///     Same speed as Array.Copy so unused
         /// </summary>
         /// <param name="source"></param>
         /// <param name="sourceIndex"></param>
@@ -175,7 +173,7 @@ namespace Mutable
         }
 
         /// <summary>
-        /// Experimental - not used
+        ///     Experimental - not used
         /// </summary>
         /// <param name="text"></param>
         /// <param name="pattern"></param>
@@ -209,7 +207,7 @@ namespace Mutable
             for (j = m;; j++)
             {
                 if (hpat == htext && CompareCharArray(text, j - m, pattern, 0, m) == 0)
-                    return (j - m);
+                    return j - m;
                 if (j >= textLength)
                     return -1;
                 htext = htext * B - text[j - m] * Bm + text[j];

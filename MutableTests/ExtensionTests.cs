@@ -33,7 +33,7 @@ namespace MutableTests
             var source = "the quick brown fox".ToCharArray();
             var sought = "brown".ToCharArray();
 
-            var position = source.SearchInCharArray(0, sought, 0);
+            var position = source.SearchInCharArray(0, sought);
             Assert.AreEqual(10, position);
 
             position = source.ReverseSearchInCharArray(sought);
@@ -119,9 +119,9 @@ namespace MutableTests
             var sought = "brown".ToCharArray();
 
             //var sought = "the".ToCharArray();
-            var result = Extensions.CompareCharArray(source, 0, sought, 0, sought.Length);
+            var result = source.CompareCharArray(0, sought, 0, sought.Length);
             Assert.NotZero(result);
-            result = Extensions.CompareCharArray(source, 10, sought, 0, sought.Length);
+            result = source.CompareCharArray(10, sought, 0, sought.Length);
             Assert.Zero(result);
         }
 
@@ -141,19 +141,19 @@ namespace MutableTests
             var source = "the quick brown fox quickly ate the rat".ToCharArray();
             var sought = "quick".ToCharArray();
 
-            var position = source.SearchInCharArray(0, sought, 0);
+            var position = source.SearchInCharArray(0, sought);
             Assert.AreEqual(4, position);
 
             position = source.ReverseSearchInCharArray(sought);
             Assert.AreEqual(20, position);
 
-            position = source.SearchInCharArray(5, sought, 0);
+            position = source.SearchInCharArray(5, sought);
             Assert.AreEqual(20, position);
 
             position = source.ReverseSearchInCharArray(sought, 20);
             Assert.AreEqual(4, position);
 
-            position = source.SearchInCharArray(21, sought, 0);
+            position = source.SearchInCharArray(21, sought);
             Assert.AreEqual(-1, position);
 
             position = source.ReverseSearchInCharArray(sought, 4);
@@ -170,7 +170,8 @@ namespace MutableTests
             Assert.AreEqual("the quick brown cow quickly ate the rat", new string(str1));
         }
 
-        [Test, Explicit]
+        [Test]
+        [Explicit]
         public void PerformanceArrayCopyStandard()
         {
             var str1 = "the quick brown fox quickly ate the rat".ToCharArray();
@@ -179,15 +180,14 @@ namespace MutableTests
             var startTime = DateTime.Now;
 
             for (var i = 0; i < 10000000; i++)
-            {
                 Array.Copy(str2, 0, str1, 16, str2.Length);
-            }
 
             var duration = DateTime.Now - startTime;
             Console.WriteLine($"total:{duration:c}");
         }
 
-        [Test, Explicit]
+        [Test]
+        [Explicit]
         public void PerformanceArrayCopyCustom()
         {
             var str1 = "the quick brown fox quickly ate the rat".ToCharArray();
@@ -196,9 +196,7 @@ namespace MutableTests
             var startTime = DateTime.Now;
 
             for (var i = 0; i < 10000000; i++)
-            {
                 str2.Copy(0, str1, 16, str2.Length);
-            }
 
             var duration = DateTime.Now - startTime;
             Console.WriteLine($"total:{duration:c}");
@@ -210,14 +208,14 @@ namespace MutableTests
             var source = "the qqqqqquick brown fox quickly ate the rat".ToCharArray();
             var sought = "quick".ToCharArray();
 
-            var position = source.SearchInCharArray(0, sought, 0);
+            var position = source.SearchInCharArray(0, sought);
             Assert.AreEqual(9, position);
 
             position = source.ReverseSearchInCharArray(sought);
             Assert.AreEqual(25, position);
 
             sought   = "qqquick".ToCharArray();
-            position = source.SearchInCharArray(0, sought, 0);
+            position = source.SearchInCharArray(0, sought);
             Assert.AreEqual(7, position);
 
             position = source.ReverseSearchInCharArray(sought);
@@ -295,7 +293,7 @@ namespace MutableTests
 
             for (var i = 0; i < 10000000; i++)
             {
-                var position = source.SearchInCharArray(5, sought, 0);
+                var position = source.SearchInCharArray(5, sought);
                 if (position != 20)
                     throw new InvalidOperationException("bugger");
             }
@@ -391,11 +389,10 @@ namespace MutableTests
             var                  sought     = "quick".ToCharArray();
 
             for (var i = 0; i < 10000000; i++)
-            {
                 try
                 {
                     lockObject.EnterWriteLock();
-                    var position = source.SearchInCharArray(5, sought, 0);
+                    var position = source.SearchInCharArray(5, sought);
                     if (position != 20)
                         throw new InvalidOperationException("bugger");
                 }
@@ -403,7 +400,6 @@ namespace MutableTests
                 {
                     lockObject.ExitWriteLock();
                 }
-            }
 
             var duration = DateTime.Now - startTime;
             Console.WriteLine($"total:{duration:c}");
@@ -418,11 +414,10 @@ namespace MutableTests
             var              sought     = "quick".ToCharArray();
 
             for (var i = 0; i < 10000000; i++)
-            {
                 try
                 {
                     lockObject.AcquireWriterLock(1000);
-                    var position = source.SearchInCharArray(5, sought, 0);
+                    var position = source.SearchInCharArray(5, sought);
                     if (position != 20)
                         throw new InvalidOperationException("bugger");
                 }
@@ -430,7 +425,6 @@ namespace MutableTests
                 {
                     lockObject.ReleaseWriterLock();
                 }
-            }
 
             var duration = DateTime.Now - startTime;
             Console.WriteLine($"total:{duration:c}");
@@ -445,14 +439,12 @@ namespace MutableTests
             var                  sought     = "quick".ToCharArray();
 
             for (var i = 0; i < 10000000; i++)
-            {
                 using (lockObject.WriteLock())
                 {
-                    var position = source.SearchInCharArray(5, sought, 0);
+                    var position = source.SearchInCharArray(5, sought);
                     if (position != 20)
                         throw new InvalidOperationException("bugger");
                 }
-            }
 
             var duration = DateTime.Now - startTime;
             Console.WriteLine($"total:{duration:c}");

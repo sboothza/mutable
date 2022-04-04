@@ -8,7 +8,7 @@
         <RepositoryUrl>https://github.com/sboothza/mutable</RepositoryUrl>
         <Company>Stephen Booth</Company>
         <Product>MutableLibrary</Product>
-        <PackageVersion>1.0.2</PackageVersion>
+        <PackageVersion>1.0.3</PackageVersion>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <Description>Mutable string implementation</Description>
@@ -18,9 +18,9 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <Optimize>false</Optimize>
+        <Optimize>false</Optimize>
     </PropertyGroup>
-<ItemGroup>
-  <None Include="README.md" Pack="true" PackagePath="\" />
-</ItemGroup>
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 </Project>
