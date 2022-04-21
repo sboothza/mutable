@@ -20,9 +20,11 @@ namespace Mutable
     /// </summary>
     public class MutableString : IEnumerable<char>, IComparable, IComparable<string>, IComparable<MutableString>, IConvertible, IEquatable<string>, IEquatable<MutableString>, ICloneable
     {
-        private char[] _data;
-        private bool   _dirty       = true;
-        private string _stringValue = "";
+        private       char[] _data;
+        private       bool   _dirty         = true;
+        private       string _stringValue   = "";
+        private       int    _currentLength = 0;
+        private const double ResizeFactor   = 2;
 
 #pragma warning disable CS8618
         public MutableString(int size) => Resize(size, false);
@@ -38,9 +40,14 @@ namespace Mutable
         ///     Creates a new string with a copy of the provided string
         /// </summary>
         /// <param name="value"></param>
-        public MutableString(string value) => _data = value.ToCharArray().SafeClone();
+        public MutableString(string value)
+        {
+            Resize((int)(value.Length * ResizeFactor), false);
+            Array.Copy(value.ToCharArray(), 0, _data, 0, value.Length);
+            _currentLength = value.Length;
+        }
 
-        public int Length => _data.Length;
+        public int Length => _currentLength;
 
         public char this[int index]
         {
@@ -109,7 +116,7 @@ namespace Mutable
             if (_dirty)
             {
                 _dirty       = false;
-                _stringValue = new string(_data);
+                _stringValue = new string(_data[..(_currentLength - 1)]);
             }
 
             return _stringValue;
@@ -119,7 +126,7 @@ namespace Mutable
         {
             var newBuffer = new char[size];
             if (moveExisting)
-                Array.Copy(_data, 0, newBuffer, startIndex, _data.Length);
+                Array.Copy(_data, 0, newBuffer, startIndex, _currentLength);
             _data = newBuffer;
         }
 
@@ -128,7 +135,7 @@ namespace Mutable
         public char[] GetSlice(int index, int length = 0)
         {
             if (length == 0)
-                length = _data.Length - index;
+                length = _currentLength - index;
 
             return _data[index..(index + length)];
         }
@@ -150,7 +157,7 @@ namespace Mutable
         /// <exception cref="IndexOutOfRangeException"></exception>
         public MutableString SetSubString(int index, char[] valueArray)
         {
-            if (index + valueArray.Length >= _data.Length)
+            if (index + valueArray.Length >= _currentLength)
                 throw new IndexOutOfRangeException();
 
             Array.Copy(valueArray, 0, _data, index, valueArray.Length);
@@ -169,7 +176,7 @@ namespace Mutable
         /// <exception cref="IndexOutOfRangeException"></exception>
         public MutableString FillSubString(int index, int length, char value)
         {
-            if (index + length > _data.Length)
+            if (index + length > _currentLength)
                 throw new IndexOutOfRangeException();
 
             Array.Fill(_data, value, index, length);
@@ -186,12 +193,21 @@ namespace Mutable
         /// <returns></returns>
         public MutableString Stretch(int index, int length)
         {
-            var newBuffer = new char[_data.Length + length];
-            Array.Copy(_data, 0, newBuffer, 0, index);
-            Array.Copy(_data, index, newBuffer, index + length, _data.Length - index);
-            _data  = newBuffer;
-            _dirty = true;
+            if (_currentLength + length > _data.Length)
+            {
+                //reallocate
+                var newBuffer = new char[(int)((_data.Length + length) * ResizeFactor)];
+                Array.Copy(_data, 0, newBuffer, 0, index);
+                Array.Copy(_data, index, newBuffer, index + length, _currentLength - index);
+                _data = newBuffer;
+            }
+            else
+            {
+                Array.Copy(_data, index, _data, index + length, _currentLength - index);
+            }
 
+            _currentLength += length;
+            _dirty         =  true;
             return this;
         }
 
@@ -216,11 +232,12 @@ namespace Mutable
         /// <returns></returns>
         public MutableString Append(char[] valueArray)
         {
-            var endOfArray = _data.Length;
-            Resize(_data.Length + valueArray.Length, true);
-            Array.Copy(valueArray, 0, _data, endOfArray, valueArray.Length);
-            _dirty = true;
+            if (_currentLength + valueArray.Length > _data.Length)
+                Resize((int)((_currentLength + valueArray.Length) * ResizeFactor), true);
 
+            Array.Copy(valueArray, 0, _data, _currentLength, valueArray.Length);
+            _currentLength += valueArray.Length;
+            _dirty         =  true;
             return this;
         }
 
